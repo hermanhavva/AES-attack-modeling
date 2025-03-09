@@ -782,12 +782,12 @@ void makePadding(std::vector<unsigned char>& data) {
     size_t remainder = data.size() % 16;
     size_t paddingSize = (remainder == 0) ? 16 : (16 - remainder);
 
-    data.push_back(0x80);
-    for (size_t i = 1; i < paddingSize; ++i) {
-        data.push_back(0x00);
+    //data.push_back(0x80);
+    for (size_t i = 0; i < paddingSize; ++i) {
+        data.push_back(static_cast<unsigned char>(paddingSize));
     }
 }
-
+/*
 void stripPadding(std::vector<unsigned char>& data) {
     if (data.empty()) {
         throw std::invalid_argument("Data is empty, cannot strip padding.");
@@ -804,7 +804,30 @@ void stripPadding(std::vector<unsigned char>& data) {
 
     data.resize(i);
 }
+*/ 
+void stripPadding(std::vector<unsigned char>& data) {
+    if (data.empty()) {
+        throw std::invalid_argument("Data is empty, cannot strip padding.");
+    }
 
+    // The padding value is stored in the last byte
+    size_t paddingSize = data.back();
+
+    // Check if the padding size is valid (it must be between 1 and 16, inclusive)
+    if (paddingSize < 1 || paddingSize > 16) {
+        throw std::invalid_argument("Invalid padding size.");
+    }
+
+    // Verify that the padding bytes are all equal to the padding size
+    for (size_t i = data.size() - paddingSize; i < data.size(); ++i) {
+        if (data[i] != static_cast<unsigned char>(paddingSize)) {
+            throw std::invalid_argument("Invalid padding format.");
+        }
+    }
+
+    // Resize the vector to remove the padding
+    data.resize(data.size() - paddingSize);
+}
 
 
 
