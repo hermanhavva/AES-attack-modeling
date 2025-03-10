@@ -80,10 +80,12 @@ void tryAttackCBC(vector<unsigned char> cipherText, AES& aes)
         cout << "Cipher text too small\n";
         return;
     }
-    int curBytePos = cipherText.size() - 1 - kBytesInBlock, counter = 0;
+    int curBytePos = cipherText.size() - 1 - kBytesInBlock, guessedCounter = 0;
     bool ifGuessed = false;
+    vector<unsigned char> guessedMsg;
+
     //unsigned char curCh = 0;
-    for (; curBytePos > kBytesInBlock; curBytePos--)  // for all bytes in pre last block
+    for (; curBytePos > kBytesInBlock && guessedCounter < kBytesInBlock; curBytePos--)  // for all bytes in pre last block
     {
         unsigned char curCh = 0;
         
@@ -96,19 +98,21 @@ void tryAttackCBC(vector<unsigned char> cipherText, AES& aes)
             try
             {
                 aes.DecryptCBC(cipherText, keyVec, iVec);  // only know if padding is okay or not 
-                cout << format("Guesses valid padding for position: {} in pre-last block, the value of char {}, counter {}\n", curBytePos, static_cast<int>(curCh), counter);
-                std::this_thread::sleep_for(std::chrono::seconds(1));
-                counter++;
+                cout << format("Guesses valid padding for position: {} in pre-last block, the value of char {}, counter {}\n", curBytePos, static_cast<int>(curCh), guessedCounter);
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                guessedCounter++;
                 ifGuessed = true;
+
+                guessedMsg.push_back(curCh ^ guessedCounter);  // trying to recover plaintext 
+
                 for (int index = curBytePos; index <= cipherText.size() - 1 - kBytesInBlock; index++)
                 {
-                    cipherText[index] = cipherText[index] ^ counter ^ (counter + 1);
+                    cipherText[index] = cipherText[index] ^ guessedCounter ^ (guessedCounter + 1);
                 }
-                
             }
             catch (const std::invalid_argument& e)
             {
-                cout << format("Invalid padding for position {}, char value {}, counter {}\n", curBytePos, static_cast<int>(curCh), counter);
+                cout << format("Invalid padding for position {}, char value {}, counter {}\n", curBytePos, static_cast<int>(curCh), guessedCounter);
             }
             // counter++;
             curCh++;
@@ -117,7 +121,7 @@ void tryAttackCBC(vector<unsigned char> cipherText, AES& aes)
         ifGuessed = false;
 
     }
-        
+    printMsg(guessedMsg);
  
 }
 
@@ -125,24 +129,35 @@ void tryAttackCBC(vector<unsigned char> cipherText, AES& aes)
 
 int main() 
 {
-
+    /*
+    unsigned char a = char(0x09); 
+    for (int i = 0; i < 256; i++)
+    {
+        a = (char)i;
+        if (a == '.')
+        {
+            cout << "success";
+        }
+    }
+    cout << a;
+    */
     
-
+    
     AES aes(AESKeyLength::AES_128);
     
     //makePadding(plainTextVec);
     vector<unsigned char> cipherText = aes.EncryptCBC(plainTextVec, keyVec, iVec); 
 
-    tryAttackCBC(cipherText, aes);
+   // tryAttackCBC(cipherText, aes);
 
 
-    printMsg(cipherText);
+   // printMsg(cipherText);
 
     vector<unsigned char> decryptText = aes.DecryptCBC(cipherText, keyVec, iVec);
 
     //stripPadding(decryptText);
 
-    printMsg(decryptText);
+  //  printMsg(decryptText);
 
     return 0;
 
