@@ -33,17 +33,18 @@ vector<unsigned char> plainTextVec(plainTextStr.begin(), plainTextStr.end());
 
 
 
-
 int main() 
 {   
-    
-    AES aes(AESKeyLength::AES_128);
 
+    /*  Padding Oracle Attack
+
+    AES aes(AESKeyLength::AES_128);
     
     vector<unsigned char> cipherText = aes.EncryptCBC(plainTextVec, keyVec, iVec); 
 
-
     PaddingOracleAttack::tryAttackCBC(cipherText, aes, keyVec, iVec);
     
+    */ 
+
     return 0;
 }
