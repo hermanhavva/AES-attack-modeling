@@ -7,6 +7,7 @@
 #include <deque>
 #include "utilities.hpp"
 #include "padding_oracle_attack.hpp"
+#include "bit_flip_attack.hpp"
 
 using std::cout; 
 using std::endl;
@@ -45,6 +46,43 @@ int main()
     PaddingOracleAttack::tryAttackCBC(cipherText, aes, keyVec, iVec);
     
     */ 
+
+
+    /*  BitFlip Attack
+
+    std::string plaintextStr = "Bob given 10 dollars to Alice";
+
+    std::vector<unsigned char> plaintext(plaintextStr.begin(), plaintextStr.end());
+
+    std::vector<unsigned char> key = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+
+    std::vector<unsigned char> ivector = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+
+    AES aes(AESKeyLength::AES_128);
+
+    std::cout << "Plaintext: ";
+
+    printVectorAsString(plaintext);
+    
+    makePadding(plaintext);
+
+    std::vector<unsigned char> ciphertext = aes.EncryptCBC(plaintext, key, ivector);
+
+    std::cout << "Original Ciphertext: ";
+    printVectorAsString(ciphertext);
+
+    bit_flipping(ivector, 10, 7);
+
+    std::cout << "Modified Ciphertext: ";
+    printVectorAsString(ciphertext);
+
+    std::vector<unsigned char> modifiedPlaintext = aes.DecryptCBC(ciphertext, key, ivector);
+    stripPadding(modifiedPlaintext);
+
+    std::cout << "Modified Plaintext: ";
+    printVectorAsString(modifiedPlaintext);
+
+    */
 
     return 0;
 }
