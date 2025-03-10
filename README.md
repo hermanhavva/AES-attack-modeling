@@ -26,7 +26,7 @@ unsigned char genRandomChar()
 Ця атака на AES CBC полягає в тому, що ми послідовно змінюємо
 байт передостанього блоку шифротексту, тим самим ми намагаємось 
 імітувати валідний padding у відкритому тексті. Коли оракул каже нам, що padding валідний, 
-то ми можемо почати підбирати padding на ще один байт.  
+то ми можемо почати підбирати наступний байт передостанього блоку шифротексту, щоб отримати ще один, але більший padding.  
 - Ми можемо відновити `DecK(cyphertext)` за властивістю операції `xor`: 
 ```
     known_value1 xor unknown_value = known_value2 ==> 
@@ -37,3 +37,11 @@ unsigned char genRandomChar()
 guessedMsg.push_front(curCh ^ guessedCounter ^ cipherText[curBytePos]);  // trying to recover plaintext 
 ```
 
+### Структура репозиторія 
+- Файли з логікою імлементації: 
+1. `bit_flip_attack.hpp`
+2. `padding_oracle_attack.hpp`
+3. `aes.hpp`
+4. `utilities.hpp` - допоміжний функціонал
+- Файл з точкою входу у програму: 
+1. `source.cpp`
