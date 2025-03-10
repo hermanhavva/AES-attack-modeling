@@ -4,7 +4,7 @@
 #include <format>
 #include <thread>
 #include <chrono>
-#include <unordered_set>
+#include <deque>
 
 using std::cout; 
 using std::endl;
@@ -58,7 +58,8 @@ vector<unsigned char> generateKey(const int len)
     return result;
 }
 
-void printMsg(vector<unsigned char> vecIn)
+template <typename T>
+void printMsg(T vecIn)
 {
     for (auto& element : vecIn)
     {
@@ -69,9 +70,23 @@ void printMsg(vector<unsigned char> vecIn)
 
 const int kBytesInBlock = 16;
 
-string plainTextStr = "King Abacaba of Palindrome Land ruled wisely, his name mirroring the lands symmetry. One day, a riddle appeared: \"What begins and ends the same? \" Smiling, he answered, \"Everything here!\" The kingdom cheered, for their harmony was balanced.";
+// string plainTextStr = "King Abacaba of Palindrome Land ruled wisely, his name mirroring the lands symmetry. One day, a riddle appeared: \"What begins and ends the same? \" Smiling, he answered, \"Everything here!\" The kingdom cheered, for their harmony was balanced.";
+string plainTextStr = "abacabaabacabaabacabaabacabaa";
 vector<unsigned char> plainTextVec(plainTextStr.begin(), plainTextStr.end());
 
+
+vector<unsigned char> applyXor(vector<unsigned char> vec1, vector<unsigned char> vec2)
+{
+    if (vec1.size() != vec2.size())
+        throw std::invalid_argument("wrong args");
+    vector<unsigned char> result;
+
+    for (int i = 0; i < vec1.size(); i++)
+    {
+        result.push_back(vec1[i] ^ vec2[i]);
+    }
+    return result;
+}
 
 void tryAttackCBC(vector<unsigned char> cipherText, AES& aes)
 {
@@ -80,101 +95,67 @@ void tryAttackCBC(vector<unsigned char> cipherText, AES& aes)
         cout << "Cipher text too small\n";
         return;
     }
-    int curBytePos = cipherText.size() - 1 - kBytesInBlock, guessedCounter = 0;
-    bool ifGuessed = false;
-    vector<unsigned char> guessedMsg;
+    auto cipherTextCopy = cipherText;
 
-    //unsigned char curCh = 0;
-    for (; curBytePos > kBytesInBlock && guessedCounter < kBytesInBlock; curBytePos--)  // for all bytes in pre last block
+    int curBytePos = cipherTextCopy.size() - 1 - kBytesInBlock; 
+    unsigned char guessedCounter = 0x00;
+    bool ifGuessed = false;
+    std::deque<unsigned char> guessedMsg;
+
+    
+    for (; curBytePos </*>*/ kBytesInBlock && guessedCounter < kBytesInBlock; curBytePos--)  // for all bytes in pre last block
     {
         unsigned char curCh = 0;
         
-
-
         while (!ifGuessed && curCh < 256)
         {
             
-            cipherText[curBytePos] = curCh;
+            cipherTextCopy[curBytePos] = curCh;
             try
             {
-                aes.DecryptCBC(cipherText, keyVec, iVec);  // only know if padding is okay or not 
+                aes.DecryptCBC(cipherTextCopy, keyVec, iVec);  // only know if padding is okay or not 
                 cout << format("Guesses valid padding for position: {} in pre-last block, the value of char {}, counter {}\n", curBytePos, static_cast<int>(curCh), guessedCounter);
-                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 guessedCounter++;
                 ifGuessed = true;
 
-                guessedMsg.push_back(curCh ^ guessedCounter);  // trying to recover plaintext 
+                guessedMsg.push_front(curCh ^ guessedCounter ^ cipherText[curBytePos]);  // trying to recover plaintext 
 
-                for (int index = curBytePos; index <= cipherText.size() - 1 - kBytesInBlock; index++)
+                for (int index = curBytePos; index <= cipherTextCopy.size() - 1 - kBytesInBlock; index++)
                 {
-                    cipherText[index] = cipherText[index] ^ guessedCounter ^ (guessedCounter + 1);
+                    cipherTextCopy[index] = cipherTextCopy[index] ^ guessedCounter ^ (guessedCounter + 1);
                 }
             }
             catch (const std::invalid_argument& e)
             {
                 cout << format("Invalid padding for position {}, char value {}, counter {}\n", curBytePos, static_cast<int>(curCh), guessedCounter);
             }
-            // counter++;
+            
             curCh++;
    
         }
         ifGuessed = false;
 
     }
-    printMsg(guessedMsg);
+    printMsg(guessedMsg);  
  
 }
 
 
 
 int main() 
-{
-    /*
-    unsigned char a = char(0x09); 
-    for (int i = 0; i < 256; i++)
-    {
-        a = (char)i;
-        if (a == '.')
-        {
-            cout << "success";
-        }
-    }
-    cout << a;
-    */
-    
+{   
     
     AES aes(AESKeyLength::AES_128);
     
     //makePadding(plainTextVec);
     vector<unsigned char> cipherText = aes.EncryptCBC(plainTextVec, keyVec, iVec); 
+    //printMsg(cipherText);
 
-   // tryAttackCBC(cipherText, aes);
-
-
-   // printMsg(cipherText);
-
-    vector<unsigned char> decryptText = aes.DecryptCBC(cipherText, keyVec, iVec);
-
-    //stripPadding(decryptText);
-
-  //  printMsg(decryptText);
-
-    return 0;
-
-
-    //cout << "The size of key: " << keyVec.size() << endl;
+    tryAttackCBC(cipherText, aes);
 
 
 
-    makePadding(plainTextVec); 
-    printMsg(plainTextVec);
-
-
-    //std::vector<unsigned char> cyphertext = aes.EncryptECB(plaintext, key);
-        //std::vector<unsigned char> cyphertext = aes.EncryptCFB(plainTextVec, keyVec, iVector);
-    //std::vector<unsigned char> decrypted = aes.DecryptCFB(cyphertext, keyVec, iVector);
-
-    stripPadding(plainTextVec);
-    printMsg(plainTextVec);
+    
     return 0;
 }
