@@ -12,6 +12,10 @@
 
 enum class AESKeyLength { AES_128, AES_192, AES_256 };
 
+void makePadding(std::vector<unsigned char>&);
+void stripPadding(std::vector<unsigned char>&);
+
+
 class AES {
 private:
     static constexpr unsigned int Nb = 4;
@@ -747,6 +751,7 @@ std::vector<unsigned char> AES::DecryptECB(std::vector<unsigned char> in, std::v
 }
 
 std::vector<unsigned char> AES::EncryptCBC(std::vector<unsigned char> in, std::vector<unsigned char> key, std::vector<unsigned char> iv) {
+    makePadding(in);
     unsigned char* out = EncryptCBC(VectorToArray(in), (unsigned int)in.size(),
         VectorToArray(key), VectorToArray(iv));
     std::vector<unsigned char> v = ArrayToVector(out, in.size());
@@ -759,6 +764,7 @@ std::vector<unsigned char> AES::DecryptCBC(std::vector<unsigned char> in, std::v
         VectorToArray(key), VectorToArray(iv));
     std::vector<unsigned char> v = ArrayToVector(out, (unsigned int)in.size());
     delete[] out;
+    stripPadding(v);
     return v;
 }
 
@@ -829,6 +835,27 @@ void stripPadding(std::vector<unsigned char>& data) {
     data.resize(data.size() - paddingSize);
 }
 
+bool isPaddingValid(const std::vector<unsigned char>& data)
+{
+    if (data.empty()) {
+        throw std::invalid_argument("Data is empty, cannot strip padding.");
+    }
+
+    // The padding value is stored in the last byte
+    size_t paddingSize = data.back();
+
+    // Check if the padding size is valid (it must be between 1 and 16, inclusive)
+    if (paddingSize < 1 || paddingSize > 16) {
+        return false;
+    }
+
+    // Verify that the padding bytes are all equal to the padding size
+    for (size_t i = data.size() - paddingSize; i < data.size(); ++i) {
+        if (data[i] != static_cast<unsigned char>(paddingSize)) {
+            return false;
+        }
+    }
+}
 
 
 
