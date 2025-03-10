@@ -129,6 +129,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="aes.hpp" />
+    <ClInclude Include="bit_flip_attack.hpp" />
     <ClInclude Include="padding_oracle_attack.hpp" />
     <ClInclude Include="utilities.hpp" />
   </ItemGroup>

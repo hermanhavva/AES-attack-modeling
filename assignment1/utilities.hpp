@@ -25,3 +25,11 @@ vector<unsigned char> generateKey(const int len)
     }
     return result;
 }
+
+void printVectorAsString(const std::vector<unsigned char>& data) {
+    for (unsigned char c : data) {
+        std::cout << c;
+    }
+    std::cout << std::endl;
+}
+

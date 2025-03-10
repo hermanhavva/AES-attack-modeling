@@ -48,6 +48,14 @@ guessedMsg.push_front(curCh ^ guessedCounter ^ cipherText[curBytePos]);  // tryi
 Це перетворює повідомлення з "Bob given 10 dollars to Alice" на "Bob given 
 60 dollars to Alice", не втрачаючи цілісності інших байтів.
 
+Логіка атаки дуже легка і імлементована в одній функції: 
+``` C++
+void bit_flipping(std::vector<unsigned char>& ciphertext, int position, int xor_value)
+{
+    ciphertext[position] ^= xor_value;
+}
+```
+
 ### Структура репозиторія 
 - Файли з логікою імлементації: 
 1. `bit_flip_attack.hpp`
@@ -56,3 +64,7 @@ guessedMsg.push_front(curCh ^ guessedCounter ^ cipherText[curBytePos]);  // tryi
 4. `utilities.hpp` - допоміжний функціонал
 - Файл з точкою входу у програму: 
 1. `source.cpp`
+
+### Особистий внесок учасників
+- **Herman Havva:** оформлення репозиторія, атака Padding oracle 
+- **Iosyp Marchenko:** програмна частина шифру `aes`, атака CBC Bit-Flipping 
