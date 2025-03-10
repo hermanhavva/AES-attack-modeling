@@ -21,3 +21,19 @@ unsigned char genRandomChar()
     return static_cast<unsigned char>(dist(rdSeed));
 }
 ```
+### Проведені атаки
+#### Padding oracle attack (Serge Vaudenay's attack)
+Ця атака на AES CBC полягає в тому, що ми послідовно змінюємо
+байт передостанього блоку шифротексту, тим самим ми намагаємось 
+імітувати валідний padding у відкритому тексті. Коли оракул каже нам, що padding валідний, 
+то ми можемо почати підбирати padding на ще один байт.  
+- Ми можемо відновити `DecK(cyphertext)` за властивістю операції `xor`: 
+```
+    known_value1 xor unknown_value = known_value2 ==> 
+==> unknown_value = known_value2 xor known_value1
+```
+Потім для кожного байта виконуємо xor з байтом початкового plaintext'у. В нашому коді це виглядає так: 
+```
+guessedMsg.push_front(curCh ^ guessedCounter ^ cipherText[curBytePos]);  // trying to recover plaintext 
+```
+

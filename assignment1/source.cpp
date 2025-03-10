@@ -70,8 +70,8 @@ void printMsg(T vecIn)
 
 const int kBytesInBlock = 16;
 
-// string plainTextStr = "King Abacaba of Palindrome Land ruled wisely, his name mirroring the lands symmetry. One day, a riddle appeared: \"What begins and ends the same? \" Smiling, he answered, \"Everything here!\" The kingdom cheered, for their harmony was balanced.";
-string plainTextStr = "abacabaabacabaabacabaabacabaa";
+string plainTextStr = "King Abacaba of Palindrome Land ruled wisely, his name mirroring the lands symmetry. One day, a riddle appeared: \"What begins and ends the same? \" Smiling, he answered, \"Everything here!\" The kingdom cheered, for their harmony was balanced.";
+// string plainTextStr = "abacabaabacabaabacabaabacabaa";
 vector<unsigned char> plainTextVec(plainTextStr.begin(), plainTextStr.end());
 
 
@@ -95,48 +95,54 @@ void tryAttackCBC(vector<unsigned char> cipherText, AES& aes)
         cout << "Cipher text too small\n";
         return;
     }
-    auto cipherTextCopy = cipherText;
+    int curBytePos = cipherText.size() - 1 - kBytesInBlock;
 
-    int curBytePos = cipherTextCopy.size() - 1 - kBytesInBlock; 
-    unsigned char guessedCounter = 0x00;
-    bool ifGuessed = false;
-    std::deque<unsigned char> guessedMsg;
-
-    
-    for (; curBytePos </*>*/ kBytesInBlock && guessedCounter < kBytesInBlock; curBytePos--)  // for all bytes in pre last block
+    while (curBytePos != 0)
     {
-        unsigned char curCh = 0;
-        
-        while (!ifGuessed && curCh < 256)
+        auto cipherTextCopy = cipherText;
+
+        unsigned char guessedCounter = 0x00;
+        bool ifGuessed = false;
+        std::deque<unsigned char> guessedMsg;
+
+
+        for (; curBytePos > cipherTextCopy.size() - 1 - 2 * kBytesInBlock && guessedCounter < kBytesInBlock; curBytePos--)  // for all bytes in pre last block
         {
-            
-            cipherTextCopy[curBytePos] = curCh;
-            try
+            unsigned char curCh = 0;
+
+            while (!ifGuessed && curCh < 256)
             {
-                aes.DecryptCBC(cipherTextCopy, keyVec, iVec);  // only know if padding is okay or not 
-                cout << format("Guesses valid padding for position: {} in pre-last block, the value of char {}, counter {}\n", curBytePos, static_cast<int>(curCh), guessedCounter);
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                guessedCounter++;
-                ifGuessed = true;
 
-                guessedMsg.push_front(curCh ^ guessedCounter ^ cipherText[curBytePos]);  // trying to recover plaintext 
-
-                for (int index = curBytePos; index <= cipherTextCopy.size() - 1 - kBytesInBlock; index++)
+                cipherTextCopy[curBytePos] = curCh;
+                try
                 {
-                    cipherTextCopy[index] = cipherTextCopy[index] ^ guessedCounter ^ (guessedCounter + 1);
-                }
-            }
-            catch (const std::invalid_argument& e)
-            {
-                cout << format("Invalid padding for position {}, char value {}, counter {}\n", curBytePos, static_cast<int>(curCh), guessedCounter);
-            }
-            
-            curCh++;
-   
-        }
-        ifGuessed = false;
+                    aes.DecryptCBC(cipherTextCopy, keyVec, iVec);  // only know if padding is okay or not 
+                    cout << format("Guesses valid padding for position: {} in pre-last block, the value of char {}, counter {}\n", curBytePos, static_cast<int>(curCh), guessedCounter);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    guessedCounter++;
+                    ifGuessed = true;
 
+                    guessedMsg.push_front(curCh ^ guessedCounter ^ cipherText[curBytePos]);  // trying to recover plaintext 
+
+                    for (int index = curBytePos; index <= cipherTextCopy.size() - 1 - kBytesInBlock; index++)
+                    {
+                        cipherTextCopy[index] = cipherTextCopy[index] ^ guessedCounter ^ (guessedCounter + 1);
+                    }
+                }
+                catch (const std::invalid_argument& e)
+                {
+                    cout << format("Invalid padding for position {}, char value {}, counter {}\n", curBytePos, static_cast<int>(curCh), guessedCounter);
+                }
+
+                curCh++;
+
+            }
+            ifGuessed = false;
+
+        }
+        
     }
+    
     printMsg(guessedMsg);  
  
 }

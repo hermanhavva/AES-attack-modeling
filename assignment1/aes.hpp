@@ -828,7 +828,7 @@ void stripPadding(std::vector<unsigned char>& data) {
     for (size_t i = data.size() - paddingSize; i < data.size(); ++i) {
         if (data[i] != static_cast<unsigned char>(paddingSize)) {
             throw std::invalid_argument("Invalid padding format.");
-        }
+        } // VERIFY
     }
 
     // Resize the vector to remove the padding
